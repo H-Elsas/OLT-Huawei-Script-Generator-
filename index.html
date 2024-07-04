@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provisionamento de ONU</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Provisionamento de ONU</h1>
+    <form id="provisionForm">
+        <div class="grid-container">
+            <div class="campo">
+                <label for="pon">PON:</label>
+                <input type="text" id="pon" name="pon" placeholder="Digite o número da PON a ser usada" required>
+            </div>
+            <div class="campo">
+                <label for="mac">MAC:</label>
+                <input type="text" id="mac" name="mac" placeholder="Digite o MAC da ONU" required>
+            </div>
+            <div class="campo">
+                <label for="tag">Tag:</label>
+                <input type="text" id="tag" name="tag" placeholder="Digite a Tag do cliente" required>
+            </div>
+            <div class="campo">
+                <label for="fs">F/S:</label>
+                <input type="fs" id="fs" name="fs" placeholder="0/Placa" required>
+            </div>
+            <div class="campo">
+                <label for="onuid">ONU-ID:</label>
+                <input type="text" id="onuid" name="onuid" placeholder="Digite o ONU-ID" required>
+            </div>
+        </div>
+        <div class="checkbox-container">
+            <div class="checkbox-campo">
+                <input type="checkbox" id="zte" name="vendor" value="ZTE">
+                <label for="zte">ZTE</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="huawei" name="vendor" value="HUAWEI">
+                <label for="huawei">HUAWEI</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="vsol" name="vendor" value="VSOL">
+                <label for="vsol">VSOL</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="epon" name="vendor" value="EPON">
+                <label for="epon">EPON</label>
+            </div>
+        </div>
+        <button type="button" id="generateButton">Gerar script</button>
+        <div class="campo">
+            <label for="scriptOutput">Comandos:</label>
+            <textarea id="scriptOutput" readonly></textarea>
+        </div>
+    </form>
+
+    <script>
+
+        function uncheckOthers(checkedId) {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="vendor"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.id !== checkedId) {
+                    checkbox.checked = false;
+                }
+            });
+        }
+
+        function getVlan(slot, pon) {
+            const vlanBase = 3017 + (slot - 1) * 16;
+            const vlan = vlanBase + pon;
+            return vlan;
+        }
+
+        document.getElementById('zte').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('huawei').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('vsol').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('epon').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const pon = parseInt(document.getElementById('pon').value, 10);
+            const mac = document.getElementById('mac').value;
+            const tag = document.getElementById('tag').value;
+            const fs = document.getElementById('fs').value;
+            const onuid = document.getElementById('onuid').value;
+
+            const slot = parseInt(fs.split('/')[1], 10); // Extrai o slot do campo F/S
+
+            const vendors = [];
+            if (document.getElementById('zte').checked) vendors.push('ZTE');
+            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
+            if (document.getElementById('vsol').checked) vendors.push('VSOL');
+            if (document.getElementById('epon').checked) vendors.push('EPON');
+
+            let script = '';
+
+            if (vendors.includes('VSOL')) {
+                const vlan = getVlan(slot, pon);
+                script += `enable\n\n`;
+                script += `config\n\n`;
+                script += `display ont autofind all\n\n`;
+                script += `interface gpon ${fs}\n\n`;
+                script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`;
+                script += `quit\n\n`;
+                
+                // Adiciona o comando de service-port somente se o ONU-ID estiver preenchido
+                if (onuid) {
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 103 multi-service user-vlan untagged tag-transform default\n\n`;
+                }
+            }
+            
+            if (vendors.includes('ZTE')) {
+                const vlan = getVlan(slot, pon);
+                script += `enable\n\n`;
+                script += `config\n\n`;
+                script += `display ont autofind all\n\n`;
+                script += `interface gpon ${fs}\n\n`;
+                script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}\n\n`;
+                script += `quit\n\n`;
+                
+                // Adiciona o comando de service-port somente se o ONU-ID estiver preenchido
+                if (onuid) {
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
+                }
+            }
+
+            if (vendors.includes('HUAWEI')) {
+                const vlan = getVlan(slot, pon);
+                script += `enable\n\n`;
+                script += `config\n\n`;
+                script += `display ont autofind all\n\n`;
+                script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                script += `interface gpon ${fs}\n\n`;
+                script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-id 4000 ont-srvprofile-id 4000 desc ${tag}\n\n`;
+                script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan 4000 priority 0\n\n`;
+                script += `quit\n\n`;
+                script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 5 multi-service user-vlan 4000 tag-transform translate\n\n`;
+            }
+
+            if (vendors.includes('EPON')) {
+                const vlan = getVlan(slot, pon);
+                script += `enable\n\n`;
+                script += `config\n\n`;
+                script += `display ont autofind all\n\n`;
+                script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                script += `interface epon ${fs}\n\n`;
+                script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
+                script += `quit\n\n`;
+                script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+            }
+
+
+            document.getElementById('scriptOutput').value = script;
+        });
+    </script>
+</body>
+</html>
