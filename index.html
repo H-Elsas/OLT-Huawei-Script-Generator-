@@ -68,6 +68,9 @@
         }
 
         function getVlan(slot, pon) {
+            if (slot == 0) {
+                slot = 1;
+            }
             const vlanBase = 3017 + (slot - 1) * 16;
             const vlan = vlanBase + pon;
             return vlan;
