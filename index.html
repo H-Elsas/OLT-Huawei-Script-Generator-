@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Provisionamento de ONU</h1>
+    <h1>Manutenção ONU</h1>
     <form id="provisionForm">
         <div class="grid-container">
             <div class="campo">
@@ -24,7 +24,7 @@
             </div>
             <div class="campo">
                 <label for="fs">F/S:</label>
-                <input type="fs" id="fs" name="fs" placeholder="0/Placa" required>
+                <input type="text" id="fs" name="fs" placeholder="0/Placa" required>
             </div>
             <div class="campo">
                 <label for="onuid">ONU-ID:</label>
@@ -49,15 +49,19 @@
                 <label for="epon">EPON</label>
             </div>
         </div>
-        <button type="button" id="generateButton">Gerar script</button>
+        <button type="button" id="generateButton">Gerar Script Provisionamento</button>
         <div class="campo">
-            <label for="scriptOutput">Comandos:</label>
+            <label for="scriptOutput">Comandos Registrar ONU:</label>
             <textarea id="scriptOutput" readonly></textarea>
         </div>
+        <div class="campo">
+            <label for="desprovisionOutput">Comandos Deletar ONU:</label>
+            <textarea id="desprovisionOutput" readonly></textarea>
+        </div>
+        <button type="button" id="generateDesprovisionButton">Gerar Script Desprovisionamento</button>
     </form>
 
     <script>
-
         function uncheckOthers(checkedId) {
             const checkboxes = document.querySelectorAll('input[type="checkbox"][name="vendor"]');
             checkboxes.forEach(checkbox => {
@@ -75,6 +79,19 @@
             const vlan = vlanBase + pon;
             return vlan;
         }
+
+        function getEponVlan(slot, pon) {
+            const eponBaseVlanMap = {
+                14: 3116,
+                15: 3108,
+                16: 3100
+            };
+        if (slot in eponBaseVlanMap) {
+            return eponBaseVlanMap[slot] + pon;
+      } else {
+            return null; // ou algum valor padrão ou mensagem de erro
+    }
+}
 
         document.getElementById('zte').addEventListener('change', function() {
             if (this.checked) {
@@ -161,20 +178,45 @@
             }
 
             if (vendors.includes('EPON')) {
-                const vlan = getVlan(slot, pon);
-                script += `enable\n\n`;
-                script += `config\n\n`;
-                script += `display ont autofind all\n\n`;
-                script += `display ont info 0 ${slot} ${pon} all\n\n`;
-                script += `interface epon ${fs}\n\n`;
-                script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
-                script += `quit\n\n`;
-                script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                const vlan = getEponVlan(pon, slot); // Correção aqui
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para EPON.\n\n`;
+                } else {
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                    script += `interface epon ${fs}\n\n`;
+                    script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                }
             }
-
 
             document.getElementById('scriptOutput').value = script;
         });
+
+        document.getElementById('generateDesprovisionButton').addEventListener('click', function() {
+    const pon = parseInt(document.getElementById('pon').value, 10);
+    const fs = document.getElementById('fs').value;
+    const onuid = document.getElementById('onuid').value;
+
+    const vendors = [];
+    if (document.getElementById('zte').checked) vendors.push('ZTE');
+    if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
+    if (document.getElementById('vsol').checked) vendors.push('VSOL');
+    if (document.getElementById('epon').checked) vendors.push('EPON');
+
+    let script = '';
+
+    if (vendors.includes('VSOL') || vendors.includes('ZTE') || vendors.includes('HUAWEI') || vendors.includes('EPON')) {
+        script += `undo service-port port ${fs}/${pon} ont ${onuid}\n\n`;
+        script += `interface gpon ${fs}\n\n`;
+        script += `ont delete ${pon} ${onuid}\n\n`;
+    }
+
+    document.getElementById('desprovisionOutput').value = script;
+});
     </script>
 </body>
 </html>
