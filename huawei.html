@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provisionamento de ONU</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.html">Manutenção ONU</a>
+        <a href="huawei.html">Seção HUAWEI</a>
+    </div>
+
+    <h1>Manutenção ONU</h1>
+    <form id="provisionForm">
+        <div class="grid-container">
+            <div class="campo">
+                <label for="pon">PON:</label>
+                <input type="text" id="pon" name="pon" placeholder="Digite o número da PON a ser usada" required>
+            </div>
+            <div class="campo">
+                <label for="mac">MAC:</label>
+                <input type="text" id="mac" name="mac" placeholder="Digite o MAC da ONU" required>
+            </div>
+            <div class="campo">
+                <label for="tag">Tag:</label>
+                <input type="text" id="tag" name="tag" placeholder="Digite a Tag do cliente" required>
+            </div>
+            <div class="campo">
+                <label for="fs">F/S:</label>
+                <input type="text" id="fs" name="fs" placeholder="0/Placa" required>
+            </div>
+            <div class="campo">
+                <label for="onuid">ONU-ID:</label>
+                <input type="text" id="onuid" name="onuid" placeholder="Digite o ONU-ID" required>
+                <select id="onuid-select">
+                    <option value="" disabled selected>Selecione</option>
+                    <option value="IGGR-SEDE-HUAWEI-OLT01">IGGR-SEDE-HUAWEI-OLT01</option>
+                    <option value="IGGR-SEDE-HUAWEI-OLT02">IGGR-SEDE-HUAWEI-OLT02</option>
+                    <option value="AMA-IGUABINHA-HUAWEI-OLT02">AMA-IGUABINHA-HUAWEI-OLT02</option>
+                    <option value="AMA-IGUABINHA-HUAWEI-OLT03">AMA-IGUABINHA-HUAWEI-OLT03</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="pppoe_user">PPPOE:</label>
+                <input type="text" id="pppoe_user" name="pppoe_user" placeholder="Login" required>
+                <input type="text" id="pppoe_senha" name="pppoe_senha" placeholder="Senha" required>
+            </div>
+        </div>
+        <div class="checkbox-container">
+            <div class="checkbox-campo">
+                <input type="checkbox" id="zte" name="vendor" value="ZTE">
+                <label for="zte">ZTE</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="huawei" name="vendor" value="HUAWEI">
+                <label for="huawei">HUAWEI</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="vsol" name="vendor" value="VSOL">
+                <label for="vsol">VSOL</label>
+            </div>
+            <div class="checkbox-campo">
+                <input type="checkbox" id="epon" name="vendor" value="EPON">
+                <label for="epon">EPON</label>
+            </div>
+        </div>
+        <button type="button" id="generateButton">Gerar Script Provisionamento</button>
+        <div class="campo">
+            <label for="scriptOutput">Comandos Registrar ONU:</label>
+            <textarea id="scriptOutput" readonly></textarea>
+        </div>
+        <div class="campo">
+            <label for="desprovisionOutput">Comandos Deletar ONU:</label>
+            <textarea id="desprovisionOutput" readonly></textarea>
+        </div>
+        <button type="button" id="generateDesprovisionButton">Gerar Script Desprovisionamento</button>
+    </form>
+
+    <script>
+        function uncheckOthers(checkedId) {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="vendor"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.id !== checkedId) {
+                    checkbox.checked = false;
+                }
+            });
+        }
+
+        function getVlan(slot, pon, olt) {
+            const vlanTable = {
+                "IGGR-SEDE-HUAWEI-OLT01": {
+                    1: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
+                    2: [3033, 3034, 3035, 3036, 3037, 3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048],
+                    15: [3108, 3109, 3110, 3116, 3112, 3113, 3114, 3115],
+                    16: [3100, 3101, 3102, 3103, 3104, 3105, 3106, 3107]
+                },
+                "IGGR-SEDE-HUAWEI-OLT02": {
+                    0: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
+                    2: [3049, 3050, 3051, 3052, 3053, 3054, 3055, 3056, 3057, 3058, 3059, 3060, 3061, 3062, 3063, 3064],
+                    3: [4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008],
+                    4: [4009, 4010, 4011, 4012, 4013, 4014, 4015, 4016],
+                    5: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
+                },
+                "AMA-IGUABINHA-HUAWEI-OLT02": {
+                    3: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
+                    5: [3081, 3082, 3083, 3084, 3085, 3086, 3087, 3088, 3089, 3090, 3091, 3092, 3093, 3094, 3095, 3096]
+                },
+                "AMA-IGUABINHA-HUAWEI-OLT03": {
+                    1: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
+                    2: [3033, 3034, 3035, 3036, 3037, 3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048],
+                    13: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+                    14: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+                    15: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+                    16: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
+                }
+            };
+
+            if (olt in vlanTable && slot in vlanTable[olt]) {
+                return vlanTable[olt][slot][pon - 1];
+            } else {
+                return null; // ou algum valor padrão ou mensagem de erro
+            }
+        }
+
+        document.getElementById('zte').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('huawei').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('vsol').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('epon').addEventListener('change', function() {
+            if (this.checked) {
+                uncheckOthers(this.id);
+            }
+        });
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const pon = parseInt(document.getElementById('pon').value, 10);
+            const slot = parseInt(document.getElementById('fs').value.split('/')[1], 10);
+            const mac = document.getElementById('mac').value;
+            const tag = document.getElementById('tag').value;
+            const fs = document.getElementById('fs').value;
+            const onuid = document.getElementById('onuid').value;
+            const olt = document.getElementById('onuid-select').value;
+
+            const vendors = [];
+            if (document.getElementById('zte').checked) vendors.push('ZTE');
+            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
+            if (document.getElementById('vsol').checked) vendors.push('VSOL');
+            if (document.getElementById('epon').checked) vendors.push('EPON');
+
+            let script = '';
+
+            if (vendors.includes('VSOL')) {
+                const vlan = getVlan(slot, pon, olt);
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                } else {
+                    script += `enable\n\n`
+                    script += `config\n\n`
+                    script += `display ont autofind all\n\n`
+                    script += `interface gpon ${fs}\n\n`
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`
+                    script += `quit`
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon}  ont ${onuid} gemport 103 multi-service user-vlan  untagged tag-transform  default\n\n`
+                }
+
+            }
+
+            if (vendors.includes('ZTE')) {
+                const vlan = getVlan(slot, pon, olt);
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                } else {
+                    script += `vlan ${vlan} smart\n`;
+                    script += `interface gpon-olt_${fs}\n`;
+                    script += `tcont 1 name TCONT-${vlan} profile 1G\n`;
+                    script += `gemport 1 unicast tcont 1 dir both\n`;
+                    script += `gemport 1 traffic-table name TRAFFIC-${vlan}\n`;
+                    script += `switchport mode trunk vport 1\n`;
+                    script += `switchport vlan ${vlan} vport 1\n`;
+                    script += `!\n`;
+                    script += `interface vport-${fs}-${pon}-${onuid}\n`;
+                    script += `port-name ${tag}\n`;
+                    script += `switchport mode access\n`;
+                    script += `switchport vlan ${vlan}\n`;
+                    script += `!\n`;
+                }
+            }
+
+            if (vendors.includes('HUAWEI')) {
+                const vlan = getVlan(slot, pon, olt);
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                } else {
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                    script += `interface gpon ${fs}\n\n`;
+                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-id 4000 ont-srvprofile-id 4000 desc ${tag}\n\n`;
+                    script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan 4000 priority 0\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 5 multi-service user-vlan 4000 tag-transform translate\n\n`;
+                }
+            }
+
+            if (vendors.includes('EPON')) {
+                const vlan = getVlan(slot, pon, olt); // Correção aqui
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para EPON.\n\n`;
+                } else {
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                    script += `interface epon ${fs}\n\n`;
+                    script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                }
+            }
+
+            document.getElementById('scriptOutput').value = script;
+        });
+
+        document.getElementById('generateDesprovisionButton').addEventListener('click', function() {
+            const pon = parseInt(document.getElementById('pon').value, 10);
+            const fs = document.getElementById('fs').value;
+            const onuid = document.getElementById('onuid').value;
+
+            const vendors = [];
+            if (document.getElementById('zte').checked) vendors.push('ZTE');
+            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
+            if (document.getElementById('vsol').checked) vendors.push('VSOL');
+            if (document.getElementById('epon').checked) vendors.push('EPON');
+
+            let script = '';
+
+            if (vendors.includes('VSOL') || vendors.includes('ZTE') || vendors.includes('HUAWEI') || vendors.includes('EPON')) {
+                script += `undo service-port port ${fs}/${pon} ont ${onuid}\n\n`;
+                script += `interface gpon ${fs}\n\n`;
+                script += `ont delete ${pon} ${onuid}\n\n`;
+            }
+
+            document.getElementById('desprovisionOutput').value = script;
+        });
+    </script>
+</body>
+</html>
