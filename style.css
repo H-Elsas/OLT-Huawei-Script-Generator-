@@ -60,7 +60,7 @@ button {
     padding: 10px;
     font-size: 16px;
     color: #fff;
-    background-color: #007bff;
+    background-color: #0056b3;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -68,7 +68,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #1c6fb3;
 }
 
 #scriptOutput, #desprovisionOutput {
@@ -80,7 +80,7 @@ button:hover {
 
 .navbar {
     overflow: hidden;
-    background-color: #333;
+    background-color: #002168;
 }
 
 .navbar a {
@@ -99,4 +99,32 @@ button:hover {
 
 .content {
     padding: 20px;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Duas colunas */
+    gap: 10px; /* Espaçamento entre os botões */
+    max-width: 700px; /* Largura máxima do contêiner */
+    margin: 20px auto; /* Centraliza o contêiner na página */
+}
+
+.grid-button {
+    padding: 50px;
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.grid-button:hover {
+    background-color: #1c6fb3;
+}
+
+#b5 {
+    grid-column: span 2;
+    width: 100%;
 }

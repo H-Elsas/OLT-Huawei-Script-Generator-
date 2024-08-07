@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provisionamento de ONU</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.html">Manutenção Geral</a>
+        <a href="huawei.html">Seção HUAWEI</a>
+        <a href="outros.html">Comandos de Diagnóstico</a>
+    </div>
+
+    <h1>Comandos de Diagnóstico</h1>
+    <form id="provisionForm">
+        <div class="grid-container">
+            <div class="campo">
+                <label for="pon">PON:</label>
+                <input type="text" id="pon" name="pon" placeholder="Digite o número da PON a ser usada" required>
+            </div>
+            <div class="campo">
+                <label for="mac">MAC:</label>
+                <input type="text" id="mac" name="mac" placeholder="Digite o MAC da ONU" required>
+            </div>
+            <div class="campo">
+                <label for="fs">F/S:</label>
+                <input type="text" id="fs" name="fs" placeholder="0/Placa" required>
+            </div>
+            <div class="campo">
+                <label for="onuid">ONU-ID:</label>
+                <input type="text" id="onuid" name="onuid" placeholder="Digite o ONU-ID" required>
+            </div>
+        </div>
+        <div class="button-grid">
+            <button id="b1" class="grid-button">Informação Óptica</button>
+            <button id="b2" class="grid-button">Registro de Alarme</button>
+            <button id="b3" class="grid-button">Todos Clientes da PON</button>
+            <button id="b4" class="grid-button">Buscar ONU (SN)</button>
+            <button id="b5" class="grid-button">Habilitar Acesso Remoto</button>
+        </div>
+        <div class="campo">
+            <label for="scriptOutput">Comandos:</label>
+            <textarea id="scriptOutput" readonly></textarea>
+        </div>
+    </form>
+
+    <script>
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const pon = parseInt(document.getElementById('pon').value, 10);
+            const slot = parseInt(document.getElementById('fs').value.split('/')[1], 10);
+            const mac = document.getElementById('mac').value;
+            const fs = document.getElementById('fs').value;
+            const onuid = document.getElementById('onuid').value;
+
+            const vendors = [];
+            if (document.getElementById('zte').checked) vendors.push('ZTE');
+            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
+            if (document.getElementById('vsol').checked) vendors.push('VSOL');
+            if (document.getElementById('epon').checked) vendors.push('EPON');
+
+            let script = '';
+
+            if (vendors.includes('VSOL')) {
+                const vlan = getVlan(slot, pon, olt);
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                } else {
+                    script += `enable\n\n`
+                    script += `config\n\n`
+                    script += `display ont autofind all\n\n`
+                    script += `interface gpon ${fs}\n\n`
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`
+                    script += `quit`
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon}  ont ${onuid} gemport 103 multi-service user-vlan  untagged tag-transform  default\n\n`
+                }
+
+            }
+
+            if (vendors.includes('ZTE')) {
+                const vlan = getVlan(slot, pon, olt);
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                } else {
+                    script += `enable`;
+                    script += `config`;
+                    script += `display ont autofind all`;
+                    script += `interface gpon ${fs}`;
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}`;
+                    script += `quit`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent`;
+                }
+            }
+
+
+            if (vendors.includes('EPON')) {
+                const vlan = getVlan(slot, pon, olt); // Correção aqui
+                if (vlan === null) {
+                    script += `Erro: slot ${slot} não é válido para EPON.\n\n`;
+                } else {
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `interface epon ${fs}\n\n`;
+                    script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                }
+            }
+
+            document.getElementById('scriptOutput').value = script;
+        });
+    </script>
+</body>
+</html>

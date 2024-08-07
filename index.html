@@ -8,11 +8,12 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="index.html">Manutenção ONU</a>
+        <a href="index.html">Manutenção Geral</a>
         <a href="huawei.html">Seção HUAWEI</a>
+        <a href="outros.html">Comandos de Diagnóstico</a>
     </div>
 
-    <h1>Manutenção ONU</h1>
+    <h1>Manutenção Geral</h1>
     <form id="provisionForm">
         <div class="grid-container">
             <div class="campo">
@@ -49,10 +50,6 @@
                 <label for="zte">ZTE</label>
             </div>
             <div class="checkbox-campo">
-                <input type="checkbox" id="huawei" name="vendor" value="HUAWEI">
-                <label for="huawei">HUAWEI</label>
-            </div>
-            <div class="checkbox-campo">
                 <input type="checkbox" id="vsol" name="vendor" value="VSOL">
                 <label for="vsol">VSOL</label>
             </div>
@@ -63,11 +60,11 @@
         </div>
         <button type="button" id="generateButton">Gerar Script Provisionamento</button>
         <div class="campo">
-            <label for="scriptOutput">Comandos Registrar ONU:</label>
+            <label for="scriptOutput">Provisionar ONU:</label>
             <textarea id="scriptOutput" readonly></textarea>
         </div>
         <div class="campo">
-            <label for="desprovisionOutput">Comandos Deletar ONU:</label>
+            <label for="desprovisionOutput">Desprovisionar ONU:</label>
             <textarea id="desprovisionOutput" readonly></textarea>
         </div>
         <button type="button" id="generateDesprovisionButton">Gerar Script Desprovisionamento</button>
@@ -125,11 +122,6 @@
             }
         });
 
-        document.getElementById('huawei').addEventListener('change', function() {
-            if (this.checked) {
-                uncheckOthers(this.id);
-            }
-        });
 
         document.getElementById('vsol').addEventListener('change', function() {
             if (this.checked) {
@@ -181,38 +173,16 @@
                 if (vlan === null) {
                     script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
                 } else {
-                    script += `vlan ${vlan} smart\n`;
-                    script += `interface gpon-olt_${fs}\n`;
-                    script += `tcont 1 name TCONT-${vlan} profile 1G\n`;
-                    script += `gemport 1 unicast tcont 1 dir both\n`;
-                    script += `gemport 1 traffic-table name TRAFFIC-${vlan}\n`;
-                    script += `switchport mode trunk vport 1\n`;
-                    script += `switchport vlan ${vlan} vport 1\n`;
-                    script += `!\n`;
-                    script += `interface vport-${fs}-${pon}-${onuid}\n`;
-                    script += `port-name ${tag}\n`;
-                    script += `switchport mode access\n`;
-                    script += `switchport vlan ${vlan}\n`;
-                    script += `!\n`;
+                    script += `enable`;
+                    script += `config`;
+                    script += `display ont autofind all`;
+                    script += `interface gpon ${fs}`;
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}`;
+                    script += `quit`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent`;
                 }
             }
 
-            if (vendors.includes('HUAWEI')) {
-                const vlan = getVlan(slot, pon, olt);
-                if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
-                } else {
-                    script += `enable\n\n`;
-                    script += `config\n\n`;
-                    script += `display ont autofind all\n\n`;
-                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
-                    script += `interface gpon ${fs}\n\n`;
-                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-id 4000 ont-srvprofile-id 4000 desc ${tag}\n\n`;
-                    script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan 4000 priority 0\n\n`;
-                    script += `quit\n\n`;
-                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 5 multi-service user-vlan 4000 tag-transform translate\n\n`;
-                }
-            }
 
             if (vendors.includes('EPON')) {
                 const vlan = getVlan(slot, pon, olt); // Correção aqui
@@ -222,7 +192,6 @@
                     script += `enable\n\n`;
                     script += `config\n\n`;
                     script += `display ont autofind all\n\n`;
-                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
                     script += `interface epon ${fs}\n\n`;
                     script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
                     script += `quit\n\n`;
@@ -246,7 +215,7 @@
 
             let script = '';
 
-            if (vendors.includes('VSOL') || vendors.includes('ZTE') || vendors.includes('HUAWEI') || vendors.includes('EPON')) {
+            if (vendors.includes('VSOL') || vendors.includes('ZTE') || vendors.includes('EPON')) {
                 script += `undo service-port port ${fs}/${pon} ont ${onuid}\n\n`;
                 script += `interface gpon ${fs}\n\n`;
                 script += `ont delete ${pon} ${onuid}\n\n`;
