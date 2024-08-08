@@ -1,5 +1,15 @@
+@font-face {
+    font-family: Neo Tech;
+    src: url('assets/NeoTech.ttf');
+}
+
+@font-face {
+    font-family: Neo Tech-Italic;
+    src: url('assets/NeoTech-LightItalic.ttf');
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: Neo Tech;
     margin: 20px;
 }
 
@@ -25,6 +35,10 @@ form {
 
 .campo label {
     margin-bottom: 5px;
+}
+
+.campo input {
+    font-family: Neo Tech-Italic;
 }
 
 #pppoe_senha {
@@ -59,6 +73,7 @@ button {
     width: 100%;
     padding: 10px;
     font-size: 16px;
+    font-family: Neo Tech-Italic;
     color: #fff;
     background-color: #0056b3;
     border: none;
@@ -77,36 +92,56 @@ button:hover {
     resize: none;
 }
 
-
 .navbar {
-    overflow: hidden;
-    background-color: #002168;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    background-color: #0056b3;
+    padding: 10px 20px;
+    width: 100%;
+    height: 80px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-icon {
+    width: 100px;
+    margin-right: 20px;
 }
 
 .navbar a {
-    float: left;
-    display: block;
-    color: #f2f2f2;
-    text-align: center;
-    padding: 14px 20px;
+    color: rgb(255, 255, 255);
     text-decoration: none;
+    padding: 14px;
+    text-align: center;
+    margin-left: 30px;
+    transition: all .5s;
+    cursor: pointer;
 }
 
 .navbar a:hover {
-    background-color: #ddd;
-    color: black;
+    -webkit-transform: scale(1.2);
+    transform: scale(1.2);
+    -webkit-filter: drop-shadow(15px 10px 5px rgba(0,0,0,.5));
+    filter: drop-shadow(15px 10px 5px rgba(0,0,0,.5));
 }
 
 .content {
     padding: 20px;
 }
 
+.grid-container {
+    margin-top: 50px;
+}
+
 .button-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Duas colunas */
-    gap: 10px; /* Espaçamento entre os botões */
-    max-width: 700px; /* Largura máxima do contêiner */
-    margin: 20px auto; /* Centraliza o contêiner na página */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px; 
+    max-width: 700px; 
+    margin: 20px auto; 
 }
 
 .grid-button {
@@ -117,14 +152,37 @@ button:hover {
     cursor: pointer;
     text-align: center;
     font-size: 16px;
+    font-family: Neo Tech;
     transition: background-color 0.3s;
 }
 
 .grid-button:hover {
-    background-color: #1c6fb3;
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+#b1 {
+    background-image: url(assets/optical.png);
+    background-size: cover;
+}
+
+#b2 {
+    background-image: url(assets/alert.png);
+    background-size: cover;
+}
+
+#b3 {
+    background-image: url(assets/clients.png);
+    background-size: cover;
+}
+
+#b4 {
+    background-image: url(assets/search.png);
+    background-size: cover;
 }
 
 #b5 {
     grid-column: span 2;
     width: 100%;
+    background-image: url(assets/remote.png);
+    background-size: cover;
 }
