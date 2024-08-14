@@ -113,7 +113,7 @@
             if (olt in vlanTable && slot in vlanTable[olt]) {
                 return vlanTable[olt][slot][pon - 1];
             } else {
-                return null; // ou algum valor padrão ou mensagem de erro
+                return null; 
             }
         }
 
@@ -147,7 +147,6 @@
 
             const vendors = [];
             if (document.getElementById('zte').checked) vendors.push('ZTE');
-            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
             if (document.getElementById('vsol').checked) vendors.push('VSOL');
             if (document.getElementById('epon').checked) vendors.push('EPON');
 
@@ -158,15 +157,14 @@
                 if (vlan === null) {
                     script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
                 } else {
-                    script += `enable\n\n`
-                    script += `config\n\n`
-                    script += `display ont autofind all\n\n`
-                    script += `interface gpon ${fs}\n\n`
-                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`
-                    script += `quit`
-                    script += `service-port vlan ${vlan} gpon ${fs}/${pon}  ont ${onuid} gemport 103 multi-service user-vlan  untagged tag-transform  default\n\n`
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `interface gpon ${fs}\n\n`;
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 103 multi-service user-vlan untagged tag-transform default\n\n`;
                 }
-
             }
 
             if (vendors.includes('ZTE')) {
@@ -174,19 +172,18 @@
                 if (vlan === null) {
                     script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
                 } else {
-                    script += `enable`;
-                    script += `config`;
-                    script += `display ont autofind all`;
-                    script += `interface gpon ${fs}`;
-                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}`;
-                    script += `quit`;
-                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent`;
+                    script += `enable\n\n`;
+                    script += `config\n\n`;
+                    script += `display ont autofind all\n\n`;
+                    script += `interface gpon ${fs}\n\n`;
+                    script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}\n\n`;
+                    script += `quit\n\n`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
                 }
             }
 
-
             if (vendors.includes('EPON')) {
-                const vlan = getVlan(slot, pon, olt); // Correção aqui
+                const vlan = getVlan(slot, pon, olt);
                 if (vlan === null) {
                     script += `Erro: slot ${slot} não é válido para EPON.\n\n`;
                 } else {
