@@ -76,7 +76,10 @@
                     script = `enable\n\n`;
                     script += `diagnose\n\n`;
                     script += `ont wan-access http 0/${slot}/${pon} ${onuid} enable\n\n`;
-                    script += `quit`;
+                    script += `quit\n\n`;
+                    script += `*APÓS ACESSO REMOTO*\n\n`;
+                    script += `Login: Epadmin\n`;
+                    script += `Senha: adminEp\n`;
                     break;
                 default:
                     script = 'Comando desconhecido.';

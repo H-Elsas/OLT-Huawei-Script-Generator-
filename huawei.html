@@ -95,12 +95,13 @@
                     16: [3100, 3101, 3102, 3103, 3104, 3105, 3106, 3107]
                 },
                 "IGGR-SEDE-HUAWEI-OLT02": {
-                    0: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
-                    2: [3049, 3050, 3051, 3052, 3053, 3054, 3055, 3056, 3057, 3058, 3059, 3060, 3061, 3062, 3063, 3064],
-                    3: [4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008],
-                    4: [4009, 4010, 4011, 4012, 4013, 4014, 4015, 4016],
+                    0: [3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019],
+                    2: [3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019],
+                    3: [3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019],
+                    4: [3019, 3019, 3019, 3019, 3019, 3019, 3019, 3019],
                     5: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
                 },
+
                 "AMA-IGUABINHA-HUAWEI-OLT02": {
                     3: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
                     5: [3081, 3082, 3083, 3084, 3085, 3086, 3087, 3088, 3089, 3090, 3091, 3092, 3093, 3094, 3095, 3096]
@@ -118,7 +119,7 @@
             if (olt in vlanTable && slot in vlanTable[olt]) {
                 return vlanTable[olt][slot][pon - 1];
             } else {
-                return null; // ou algum valor padrão ou mensagem de erro
+                return null;
             }
         }
 
@@ -201,14 +202,11 @@
                     script += `config\n\n`;
                     script += `display ont autofind all\n\n`;
                     script += `interface gpon ${fs}\n\n`;
-                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-name BR-GPON-S${slot}PON${pon}\n\n`;
-                    script += `ont-srvprofile-name BR-GPON-S${slot}PON${pon} desc ${pppoe_user}\n\n`;
+                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-name BR-GPON-S${slot}P${pon} ont-srvprofile-name BR-GPON-S${slot}P${pon} desc ${pppoe_user}\n\n\n\n`;
                     script += `ont port native-vlan ${pon} ONU-ID eth 1 vlan  ${vlan} priority 0\n\n`;
-                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 500 multi-service\n\n`;
-                    script += `user-vlan ${vlan} tag-transform transparent\n\n`;
+                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 500 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
                     script += `interface gpon ${fs}\n\n`;
-                    script += `ont ipconfig ${pon} ${onuid} ip-index 0 pppoe user-account username ${pppoe_user}\n\n`;
-                    script += `password ${pppoe_senha} vlan ${vlan}\n\n`;
+                    script += `ont ipconfig ${pon} ${onuid} ip-index 0 pppoe user-account username ${pppoe_user} password ${pppoe_senha} vlan ${vlan}\n\n`;
                     script += `ont wan-config ${pon} ${onuid} ip-index 0 profile-name "INT6-WAN-ROUTER"\n\n`;
                     script += `ont internet-config ${pon} ${onuid} ip-index 0\n\n`;
                     script += `ont port route ${pon} ${onuid} eth 1-5 enable\n\n`;
