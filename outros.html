@@ -70,7 +70,10 @@
                     script = `display ont info all 0 ${slot} ${pon}`;
                     break;
                 case 'b4':
-                    script = `display ont info by-sn ${mac}`;
+                    script = `*GPON*\n`;
+                    script += `display ont info by-sn ${mac}\n\n`;
+                    script += `*EPON*\n`;
+                    script += `display ont info by-mac ${mac}`;
                     break;
                 case 'b5':
                     script = `enable\n\n`;

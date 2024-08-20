@@ -110,19 +110,25 @@
                 }
             };
 
-            if (olt in vlanTable && slot in vlanTable[olt]) {
-                return vlanTable[olt][slot][pon - 1];
-            } else {
-                return null; 
+             // Se o PON for 0, trate-o como 2
+            if (pon === 0 && olt === "IGGR-SEDE-HUAWEI-OLT02") {
+                pon = 2;
             }
-        }
+
+            if (olt in vlanTable && slot in vlanTable[olt]) {
+                if (pon >= 1 && pon <= vlanTable[olt][slot].length) {
+                    return vlanTable[olt][slot][pon - 1];
+                } else {
+                    return "*PON não existe nesta OLT*";
+                }
+            }
 
         document.getElementById('zte').addEventListener('change', function() {
             if (this.checked) {
                 uncheckOthers(this.id);
             }
         });
-
+    }
 
         document.getElementById('vsol').addEventListener('change', function() {
             if (this.checked) {
