@@ -215,8 +215,9 @@
                     script += `config\n\n`;
                     script += `display ont autofind all\n\n`;
                     script += `interface gpon ${fs}\n\n`;
-                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-name BR-GPON-S${slot}P${pon} ont-srvprofile-name BR-GPON-S${slot}P${pon} desc ${pppoe_user}\n\n\n\n`;
-                    script += `ont port native-vlan ${pon} ONU-ID eth 1 vlan  ${vlan} priority 0\n\n`;
+                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-name BR-GPON-S${slot}P${pon} ont-srvprofile-name BR-GPON-S${slot}P${pon} desc ${pppoe_user}\n\n`;
+                    script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan  ${vlan} priority 0\n\n`;
+                    script += `quit\n\n`;
                     script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 500 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
                     script += `interface gpon ${fs}\n\n`;
                     script += `ont ipconfig ${pon} ${onuid} ip-index 0 pppoe user-account username ${pppoe_user} password ${pppoe_senha} vlan ${vlan}\n\n`;
