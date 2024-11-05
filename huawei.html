@@ -36,13 +36,17 @@
             <div class="campo">
                 <label for="onuid">ONU-ID:</label>
                 <input type="text" id="onuid" name="onuid" placeholder="Digite o ONU-ID" required>
-                <select id="onuid-select">
+                <!-- <select id="onuid-select">
                     <option value="" disabled selected>Selecione</option>
                     <option value="IGGR-SEDE-HUAWEI-OLT01">IGGR-SEDE-HUAWEI-OLT01</option>
                     <option value="IGGR-SEDE-HUAWEI-OLT02">IGGR-SEDE-HUAWEI-OLT02</option>
                     <option value="AMA-IGUABINHA-HUAWEI-OLT02">AMA-IGUABINHA-HUAWEI-OLT02</option>
                     <option value="AMA-IGUABINHA-HUAWEI-OLT03">AMA-IGUABINHA-HUAWEI-OLT03</option>
-                </select>
+                </select> -->
+            </div>
+            <div class="campo">
+                <label for="vlan">VLAN:</label>
+                <input type="text" id="vlan" placeholder="Digite a VLAN" required>
             </div>
             <div class="campo">
                 <label for="pppoe_user">PPPOE:</label>
@@ -86,7 +90,7 @@
             });
         }
 
-        function getVlan(slot, pon, olt) {
+        /*function getVlan(slot, pon, olt) {
             const vlanTable = {
                 "IGGR-SEDE-HUAWEI-OLT01": {
                     1: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
@@ -114,10 +118,10 @@
                     15: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
                     16: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
                 }
-            };
+            };*/
 
             // Se o PON for 0, trate-o como 2
-            if (pon === 0 && olt === "IGGR-SEDE-HUAWEI-OLT02") {
+            /*if (pon === 0 && olt === "IGGR-SEDE-HUAWEI-OLT02") {
                     pon = 2;
             }
 
@@ -127,132 +131,70 @@
                 } else {
                     return "*PON não existe nesta OLT*";
                 }
-            }
+            }*/
 
-        document.getElementById('zte').addEventListener('change', function() {
-            if (this.checked) {
-                uncheckOthers(this.id);
-            }
-        });
-    }
+            document.getElementById('gpon').addEventListener('change', function() {
+                if (this.checked) uncheckOthers(this.id);
+            });
 
-        document.getElementById('gpon').addEventListener('change', function() {
-            if (this.checked) {
-                uncheckOthers(this.id);
-            }
-        });
+            document.getElementById('epon').addEventListener('change', function() {
+                if (this.checked) uncheckOthers(this.id);
+            });
 
-        document.getElementById('epon').addEventListener('change', function() {
-            if (this.checked) {
-                uncheckOthers(this.id);
-            }
-        });
+            document.getElementById('nova').addEventListener('change', function() {
+                if (this.checked) uncheckOthers(this.id);
+            });
 
-        document.getElementById('nova').addEventListener('change', function() {
-            if (this.checked) {
-                uncheckOthers(this.id);
-            }
-        });
+            document.getElementById('generateButton').addEventListener('click', function() {
+                const pon = document.getElementById('pon').value;
+                const fs = document.getElementById('fs').value;
+                const mac = document.getElementById('mac').value;
+                const tag = document.getElementById('tag').value;
+                const onuid = document.getElementById('onuid').value;
+                const vlan = document.getElementById('vlan').value;
+                const pppoe_user = document.getElementById('pppoe_user').value;
+                const pppoe_senha = document.getElementById('pppoe_senha').value;
 
+                const vendors = [];
+                if (document.getElementById('gpon').checked) vendors.push('GPON');
+                if (document.getElementById('epon').checked) vendors.push('EPON');
+                if (document.getElementById('nova').checked) vendors.push('Novo modelo');
 
-        document.getElementById('generateButton').addEventListener('click', function() {
-            const pon = parseInt(document.getElementById('pon').value, 10);
-            const slot = parseInt(document.getElementById('fs').value.split('/')[1], 10);
-            const mac = document.getElementById('mac').value;
-            const tag = document.getElementById('tag').value;
-            const fs = document.getElementById('fs').value;
-            const onuid = document.getElementById('onuid').value;
-            const olt = document.getElementById('onuid-select').value;
-            const pppoe_user = document.getElementById('pppoe_user').value;
-            const pppoe_senha = document.getElementById('pppoe_senha').value;
+                let script = '';
 
-            const vendors = [];
-            if (document.getElementById('gpon').checked) vendors.push('GPON');
-            if (document.getElementById('epon').checked) vendors.push('EPON');
-            if (document.getElementById('nova').checked) vendors.push('Novo modelo');
-
-            let script = '';
-
-            if (vendors.includes('GPON')) {
-                const vlan = getVlan(slot, pon, olt);
-                if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
-                } else {
+                if (vendors.includes('GPON')) {
+                    script += `*****1ª PARTE - ativar*****\n\n`;
                     script += `enable\n\n`;
-                    script += `config\n\n`;
+                    script += `config\n\n\n\n`;
+                    script += `******2ª PARTE - vlan******\n\n`;
+                    script += `display current-configuration section bbs | include ${fs}/${pon}\n\n\n\n`;
+                    script += `*****3ª PARTE - script*****\n\n`;
                     script += `display ont autofind all\n\n`;
-                    script += `display ont info 0 ${slot} ${pon} all\n\n`;
+                    script += `display ont info 0 ${fs.split('/')[1]} ${pon} all\n\n`;
                     script += `interface gpon ${fs}\n\n`;
                     script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-id 4000 ont-srvprofile-id 4000 desc ${tag}\n\n`;
                     script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan 4000 priority 0\n\n`;
                     script += `quit\n\n`;
                     script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 5 multi-service user-vlan 4000 tag-transform translate\n\n`;
+                    script += `***************************\n`
                 }
 
-            }
+                document.getElementById('scriptOutput').value = script;
+            });
 
-            if (vendors.includes('EPON')) {
-                const vlan = getVlan(slot, pon, olt);
-                if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
-                } else {
-                    script += `enable\n\n`;
-                    script += `config\n\n`;
-                    script += `display ont autofind all\n\n`;
-                    script += `interface epon ${fs}\n\n`;
-                    script += `ont add ${pon} ${onuid} mac-auth ${mac} oam ont-lineprofile-id 2001 ont-srvprofile-id 2001 desc ${mac}\n\n`;
-                    script += `quit\n\n`;
-                    script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default`;
-                }
-            }
+            document.getElementById('generateDesprovisionButton').addEventListener('click', function() {
+                const pon = document.getElementById('pon').value;
+                const fs = document.getElementById('fs').value;
+                const onuid = document.getElementById('onuid').value;
 
-            if (vendors.includes('Novo modelo')) {
-                const vlan = getVlan(slot, pon, olt);
-                if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
-                } else {
-                    script += `enable\n\n`;
-                    script += `config\n\n`;
-                    script += `display ont autofind all\n\n`;
-                    script += `interface gpon ${fs}\n\n`;
-                    script += `ont add ${pon} ${onuid} sn-auth ${mac} omci ont-lineprofile-name BR-GPON-S${slot}P${pon} ont-srvprofile-name BR-GPON-S${slot}P${pon} desc ${pppoe_user}\n\n`;
-                    script += `ont port native-vlan ${pon} ${onuid} eth 1 vlan  ${vlan} priority 0\n\n`;
-                    script += `quit\n\n`;
-                    script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 500 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
-                    script += `interface gpon ${fs}\n\n`;
-                    script += `ont ipconfig ${pon} ${onuid} ip-index 0 pppoe user-account username ${pppoe_user} password ${pppoe_senha} vlan ${vlan}\n\n`;
-                    script += `ont wan-config ${pon} ${onuid} ip-index 0 profile-name "INT6-WAN-ROUTER"\n\n`;
-                    script += `ont internet-config ${pon} ${onuid} ip-index 0\n\n`;
-                    script += `ont port route ${pon} ${onuid} eth 1-5 enable\n\n`;
-                    script += `ont tr069-server-config ${pon} ${onuid} profile-name "INT6_URL_TR069"\n\n`;
-                    script += `quit`;
-                }
-            }
-
-
-            document.getElementById('scriptOutput').value = script;
-        });
-
-        document.getElementById('generateDesprovisionButton').addEventListener('click', function() {
-            const pon = parseInt(document.getElementById('pon').value, 10);
-            const fs = document.getElementById('fs').value;
-            const onuid = document.getElementById('onuid').value;
-
-            const vendors = [];
-            if (document.getElementById('gpon').checked) vendors.push('GPON');
-            if (document.getElementById('epon').checked) vendors.push('EPON');
-            if (document.getElementById('nova').checked) vendors.push('Novo modelo');
-
-            let script = '';
-
-            if (vendors.includes('GPON') || vendors.includes('EPON') || vendors.includes('Novo modelo')) {
+                let script = '';
                 script += `undo service-port port ${fs}/${pon} ont ${onuid}\n\n`;
                 script += `interface gpon ${fs}\n\n`;
                 script += `ont delete ${pon} ${onuid}\n\n`;
-            }
 
-            document.getElementById('desprovisionOutput').value = script;
-        });
+                document.getElementById('desprovisionOutput').value = script;
+            });
+
     </script>
 </body>
 </html>

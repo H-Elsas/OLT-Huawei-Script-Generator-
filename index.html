@@ -36,13 +36,17 @@
             <div class="campo">
                 <label for="onuid">ONU-ID:</label>
                 <input type="text" id="onuid" name="onuid" placeholder="Digite o ONU-ID" required>
-                <select id="onuid-select">
+                <!-- <select id="onuid-select">
                     <option value="" disabled selected>Selecione</option>
                     <option value="IGGR-SEDE-HUAWEI-OLT01">IGGR-SEDE-HUAWEI-OLT01</option>
                     <option value="IGGR-SEDE-HUAWEI-OLT02">IGGR-SEDE-HUAWEI-OLT02</option>
                     <option value="AMA-IGUABINHA-HUAWEI-OLT02">AMA-IGUABINHA-HUAWEI-OLT02</option>
                     <option value="AMA-IGUABINHA-HUAWEI-OLT03">AMA-IGUABINHA-HUAWEI-OLT03</option>
-                </select>
+                </select> -->
+            </div>
+            <div class="campo">
+                <label for="vlan">VLAN:</label>
+                <input type="text" id="vlan" placeholder="Digite a VLAN" required>
             </div>
         </div>
         <div class="checkbox-container">
@@ -81,7 +85,7 @@
             });
         }
 
-        function getVlan(slot, pon, olt) {
+        /* function getVlan(slot, pon, olt) {
             const vlanTable = {
                 "IGGR-SEDE-HUAWEI-OLT01": {
                     1: [3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030, 3031, 3032],
@@ -108,10 +112,10 @@
                     15: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
                     16: [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
                 }
-            };
+            };*/
 
              // Se o PON for 0, trate-o como 2
-            if (pon === 0 && olt === "IGGR-SEDE-HUAWEI-OLT02") {
+            /*if (pon === 0 && olt === "IGGR-SEDE-HUAWEI-OLT02") {
                 pon = 2;
             }
 
@@ -121,14 +125,14 @@
                 } else {
                     return "*PON não existe nesta OLT*";
                 }
-            }
+            }*/
 
         document.getElementById('zte').addEventListener('change', function() {
             if (this.checked) {
                 uncheckOthers(this.id);
             }
         });
-    }
+    
 
         document.getElementById('vsol').addEventListener('change', function() {
             if (this.checked) {
@@ -149,7 +153,8 @@
             const tag = document.getElementById('tag').value;
             const fs = document.getElementById('fs').value;
             const onuid = document.getElementById('onuid').value;
-            const olt = document.getElementById('onuid-select').value;
+            // const olt = document.getElementById('onuid-select').value;
+            const vlan = document.getElementById('vlan').value;
 
             const vendors = [];
             if (document.getElementById('zte').checked) vendors.push('ZTE');
@@ -159,47 +164,63 @@
             let script = '';
 
             if (vendors.includes('VSOL')) {
-                const vlan = getVlan(slot, pon, olt);
+                const vlan = document.getElementById('vlan').value;
                 if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                    script += `*Erro: VLAN não lançada.*\n\n`;
                 } else {
+                    script += `*****1ª PARTE - ativar*****\n\n`
                     script += `enable\n\n`;
-                    script += `config\n\n`;
+                    script += `config\n\n\n\n`;
+                    script += `******2ª PARTE - vlan******\n\n`
+                    script += `display current-configuration section bbs | include ${fs}/${pon}\n\n\n\n`;
+                    script += `*****3ª PARTE - script*****\n\n`
                     script += `display ont autofind all\n\n`;
                     script += `interface gpon ${fs}\n\n`;
                     script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-name GPONT ont-srvprofile-name GPONT desc ${tag}\n\n`;
                     script += `quit\n\n`;
                     script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 103 multi-service user-vlan untagged tag-transform default\n\n`;
+                    script += `***************************\n`
+                    
                 }
             }
 
             if (vendors.includes('ZTE')) {
-                const vlan = getVlan(slot, pon, olt);
+                const vlan = document.getElementById('vlan').value;
                 if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para ${olt}.\n\n`;
+                    script += `*Erro: VLAN não lançada.*\n\n`;
                 } else {
+                    script += `*****1ª PARTE - ativar*****\n\n`
                     script += `enable\n\n`;
-                    script += `config\n\n`;
+                    script += `config\n\n\n\n`;
+                    script += `******2ª PARTE - vlan******\n\n`
+                    script += `display current-configuration section bbs | include ${fs}/${pon}\n\n\n\n`;
+                    script += `*****3ª PARTE - script*****\n\n`
                     script += `display ont autofind all\n\n`;
                     script += `interface gpon ${fs}\n\n`;
                     script += `ont add ${pon} sn-auth ${mac} omci ont-lineprofile-id ${vlan} ont-srvprofile-id 5 desc ${tag}\n\n`;
                     script += `quit\n\n`;
                     script += `service-port vlan ${vlan} gpon ${fs}/${pon} ont ${onuid} gemport 44 multi-service user-vlan ${vlan} tag-transform transparent\n\n`;
+                    script += `***************************\n`
                 }
             }
 
             if (vendors.includes('EPON')) {
-                const vlan = getVlan(slot, pon, olt);
+                const vlan = document.getElementById('vlan').value;
                 if (vlan === null) {
-                    script += `Erro: slot ${slot} não é válido para EPON.\n\n`;
+                    script += `*Erro: VLAN não lançada.*\n\n`;
                 } else {
+                    script += `*****1ª PARTE - ativar*****\n\n`
                     script += `enable\n\n`;
-                    script += `config\n\n`;
+                    script += `config\n\n\n\n`;
+                    script += `******2ª PARTE - vlan******\n\n`
+                    script += `display current-configuration section bbs | include ${fs}/${pon}\n\n\n\n`;
+                    script += `*****3ª PARTE - script*****\n\n`
                     script += `display ont autofind all\n\n`;
                     script += `interface epon ${fs}\n\n`;
                     script += `ont add ${pon} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${tag}\n\n`;
                     script += `quit\n\n`;
                     script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                    script += `***************************\n`
                 }
             }
 
@@ -213,7 +234,6 @@
 
             const vendors = [];
             if (document.getElementById('zte').checked) vendors.push('ZTE');
-            if (document.getElementById('huawei').checked) vendors.push('HUAWEI');
             if (document.getElementById('vsol').checked) vendors.push('VSOL');
             if (document.getElementById('epon').checked) vendors.push('EPON');
 
