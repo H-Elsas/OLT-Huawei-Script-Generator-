@@ -132,13 +132,20 @@
                 script += `*****1ª PARTE - ativar*****\n\n`;
                 script += `enable\n\nconfig\n\n`;
                 script += `******2ª PARTE - vlan******\n\n`;
-                script += `display current-configuration section bbs | include ${fs}/${pon}\n\n`;
+                script += `interface epon ${fs}/${pon}\n\ndisplay current configuration\n\nquit\n\ndisplay current-configuration section bbs | include ${fs}/${pon}\n\n`;
                 script += `*****3ª PARTE - script*****\n\n`;
                 script += `display ont autofind all\n\n`;
                 script += `interface epon ${fs}\n\n`;
                 script += `ont add ${pon} ${onuid} mac-auth ${mac} oam ont-lineprofile-id 2001 ont-srvprofile-id 2001 desc ${mac}\n\n`;
+                script += `### OU ###\n`;
+                script += `ont add ${pon} ${onuid} mac-auth ${mac} oam ont-lineprofile-id 701 ont-srvprofile-id 701 desc ${mac}\n\n`;
+                script += `### OU ###\n`;
+                script += `ont add ${pon} ${onuid} mac-auth ${mac} oam ont-lineprofile-name EPONT ont-srvprofile-name EPONT desc ${mac}\n\n`;
                 script += `quit\n\n`;
-                script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`;
+                script += `### CASO SEJA AX3000 ###\n`
+                script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan ${vlan} tag-transform translate\n\n`;
+                script += `### CASO NÃO SEJA ###\n`;
+                script += `service-port vlan ${vlan} epon ${fs}/${pon} ont ${onuid} multi-service user-vlan untagged tag-transform default\n\n`; 
                 script += `***************************\n`;
             } else if (document.getElementById('nova').checked) {
                 script += `*****1ª PARTE - ativar*****\n\n`;
