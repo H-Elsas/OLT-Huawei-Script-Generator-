@@ -49,7 +49,7 @@ document.getElementById('generateButton').addEventListener('click', function() {
         script += `*****1ª PARTE - ativar*****\n\n`;
         script += `enable\n\nconfig\n\n`;
         script += `******2ª PARTE - vlan******\n\n`;
-        script += `interface epon ${fs}/${pon}\n\ndisplay current-configuration\n\nquit\n\ndisplay current-configuration section bbs | include ${fs}/${pon}\n\n`;
+        script += `interface epon ${fs}\n\ndisplay current-configuration\n\nquit\n\ndisplay current-configuration section bbs | include ${fs}/${pon}\n\n`;
         script += `*****3ª PARTE - script*****\n\n`;
         script += `display ont autofind all\n\n`;
         script += `interface epon ${fs}\n\n`;
